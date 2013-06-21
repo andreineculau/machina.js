@@ -49,16 +49,15 @@ _.extend( Fsm.prototype, {
 					handler = this[ "*" ];
 					action = "*";
 				}
-				if ( ! this._currentAction ) 
-					this._currentAction = action ;
+				this._currentAction = action ;
 				this.emit.call( this, HANDLING, { inputType: inputType, args: args.slice(1) } );
 				if (_.isFunction(handler))
 					handler = handler.apply( this, catchAll ? args : args.slice( 1 ) );
+				this.emit.call( this, HANDLED, { inputType: inputType, args: args.slice(1) } );
+				this._priorAction = action;
+				this._currentAction = "";
 				if (_.isString(handler))
 					this.transition( handler ) ;
-				this.emit.call( this, HANDLED, { inputType: inputType, args: args.slice(1) } );
-				this._priorAction = this._currentAction;
-				this._currentAction = "";
 				this.processQueue( NEXT_HANDLER );
 			}
 			else {
@@ -81,6 +80,7 @@ _.extend( Fsm.prototype, {
 					this.inExitHandler = false;
 				}
 				this.emit.call( this, TRANSITION, { fromState: oldState, action: this._currentAction, toState: newState } );
+				this._currentAction = "";
 				if ( this.states[newState]._onEnter ) {
 					this.states[newState]._onEnter.call( this );
 				}
